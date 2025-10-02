@@ -1,30 +1,36 @@
 const express = require("express");
-const cors = require("cors");
-const math = require("mathjs");
 const path = require("path");
-
 const app = express();
-app.use(cors());
+const PORT = 3000;
+
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "../frontend")));
 
-// Servir frontend (carpeta public)
-app.use(express.static(path.join(__dirname, "public")));
+app.post("/calcular", (req, res) => {
+  const { operacion, numero1, numero2 } = req.body;
+  let resultado;
 
-app.post("/calculate", (req, res) => {
-    try {
-        let { expression } = req.body;
-
-        // Soporte para raíz cuadrada
-        expression = expression.replace(/sqrt\((.*?)\)/g, (_, val) => `sqrt(${val})`);
-
-        // Evaluar expresión
-        const result = math.evaluate(expression);
-
-        res.json({ result });
-    } catch (error) {
-        res.status(400).json({ error: "Expresión inválida" });
+  try {
+    switch (operacion) {
+      case "suma": resultado = numero1 + numero2; break;
+      case "resta": resultado = numero1 - numero2; break;
+      case "multiplicacion": resultado = numero1 * numero2; break;
+      case "division": 
+        if (numero2 === 0) throw "División por cero";
+        resultado = numero1 / numero2; 
+        break;
+      case "modulo": resultado = numero1 % numero2; break;
+      case "potencia": resultado = Math.pow(numero1, numero2); break;
+      case "raiz": resultado = Math.sqrt(numero1); break;
+      case "divisionEntera": resultado = Math.floor(numero1 / numero2); break;
+      default: throw "Operación no válida";
     }
+    res.json({ resultado });
+  } catch (err) {
+    res.status(400).json({ error: err.toString() });
+  }
 });
 
-const PORT = 3000;
-app.listen(PORT, () => console.log(`✅ Calculadora lista en http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
